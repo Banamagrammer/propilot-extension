@@ -1,0 +1,23 @@
+- ~~Join session by double clicking in Plea window~~
+  - ~~Sends a websocket request for session id~~
+  - ~~Server checks to see if pleader session is available~~
+  - ~~If so sends session id, if not sends unavailable~~
+  - ~~Pro client calls vsls to join with session id~~
+  - ~~Pro client notifies that they were unable to join invalid session~~
+- Track inactive pleas on server
+  - ~~Add state to array elements~~
+  - ~~Initialize state to active~~
+  - ~~Filter out inactive pleas on server comms~~
+  - ~~Return error when pro tries to take pity on an inactive plea~~
+  - When a pro takes pity, set the plea to inactive
+  - When a pro leaves a session, set plea to active
+- Cancel pleas
+  - Add cancel message to server and remove from array upon reception. Broadcast removal.
+  - Open websocket connection on plea
+  - Listen to vsls session and cancel plea when it ends
+  - Cancel plea when websocket connection is closed
+- Hide pleas if you have an active plea
+- How to host in cloud?
+- How to maintain state?
+- How to test extension?
+- How to publish?
