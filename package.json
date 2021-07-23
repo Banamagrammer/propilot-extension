@@ -3,7 +3,6 @@
 	"displayName": "Propilot",
 	"description": "Pair programming with the greatest minds in the cyberverse",
 	"version": "0.0.1",
-	"publisher": "pro-gramming",
 	"author": {
 		"name": "The Banamagrammer",
 		"email": "todo@todo.com",
@@ -53,7 +52,7 @@
 					"id": "pleas",
 					"name": "Pleas",
 					"contextualTitle": "Pleas for halllp",
-					"when": "config.propilot.imsopro"
+					"when": "config.propilot.imsopro && propilot.isIdling"
 				}
 			]
 		}

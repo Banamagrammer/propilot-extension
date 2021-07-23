@@ -3,7 +3,7 @@ import { getApi } from 'vsls';
 import * as WebSocket from 'ws';
 import { MyPlea, Plea, PleaRequest, PleaSession } from '../types/plea';
 import { addPlea, clearPleas, getState, removePlea, setPleas, setState } from '../state/state';
-import { idle, Ignored, Pitied, Pitying, Pleading } from '../types/state';
+import { Idling, Ignored, Pitied, Pitying, Pleading } from '../types/state';
 import { complement, isNil } from 'ramda';
 
 const protocol = 'ws';
@@ -26,7 +26,7 @@ const handleOpen = () => {
 
 const handleClose = () => {
 	clearPleas();
-	setState(idle);
+	setState(new Idling());
 
 	console.log('Disconnected');
 	if (shouldReconnect) {
@@ -50,6 +50,7 @@ const handlePleaAccepted = (plea: MyPlea) => {
 
 const handlePleaCanceled = ({ id }: { id: string }) => {
 	vscode.window.showInformationMessage(`Plea ${id} canceled`);
+	setState(new Idling());
 };
 
 const handlePleaNotFound = ({ id }: { id: string }) => {

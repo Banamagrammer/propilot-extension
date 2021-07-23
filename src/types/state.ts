@@ -33,16 +33,4 @@ type PropilotState = {
 
 type StateListener = (oldState: PropilotState, newState: PropilotState) => void;
 
-const idle = new Idling();
-
-export {
-	PropilotState,
-	Pleading,
-	Pitying,
-	Idling,
-	Ignored,
-	Pitied,
-	UserState,
-	StateListener,
-	idle,
-};
+export { PropilotState, Pleading, Pitying, Idling, Ignored, Pitied, UserState, StateListener };

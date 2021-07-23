@@ -15,7 +15,8 @@
   - ~~Return error when pro tries to take pity on an inactive plea~~
   - When a pro takes pity, set the plea to inactive
   - When a pro leaves a session, set plea to active
-- Hide pleas if you have an active plea
+- ~~Hide pleas if you have an active plea~~
+- Show status (probably on bottom of the screen)
 - How to host in cloud?
 - How to maintain state?
 - How to test extension?
