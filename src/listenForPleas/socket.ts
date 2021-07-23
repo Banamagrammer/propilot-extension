@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import { getApi } from 'vsls';
 import * as WebSocket from 'ws';
-import { EXTENSION_NAME, PRO_CONFIGURATION } from '../constants';
-import { Plea, PleaSession } from '../types/plea';
-import { addPlea, clearPleas, removePlea, setPleas } from './getPleas';
+import { MyPlea, Plea, PleaRequest, PleaSession } from '../types/plea';
+import { addPlea, clearPleas, getState, removePlea, setPleas, setState } from '../state/state';
+import { idle, Ignored, Pitied, Pitying, Pleading } from '../types/state';
+import { complement, isNil } from 'ramda';
 
 const protocol = 'ws';
 const port = 8080;
@@ -15,19 +16,9 @@ let socket: WebSocket | undefined;
 let intervalId: NodeJS.Timeout;
 let shouldReconnect = true;
 
-let subscriptions: (() => void)[] = [];
-
 const isSocketActive = () => socket !== undefined && socket.readyState < WebSocket.CLOSING;
 
-const amPro = () => vscode.workspace.getConfiguration(EXTENSION_NAME)[PRO_CONFIGURATION];
-
-const cannotListen = () => isSocketActive() || !amPro();
-
-const sendNotifications = (): void => {
-	for (const subscription of subscriptions) {
-		subscription();
-	}
-};
+const cannotListen = () => isSocketActive();
 
 const handleOpen = () => {
 	console.log('Connected');
@@ -35,7 +26,7 @@ const handleOpen = () => {
 
 const handleClose = () => {
 	clearPleas();
-	sendNotifications();
+	setState(idle);
 
 	console.log('Disconnected');
 	if (shouldReconnect) {
@@ -49,15 +40,27 @@ const handleRemove = (data: Plea) => {
 	removePlea(data.id);
 };
 
-const handleList = ({ pleas }: { pleas: Plea[] }) => setPleas(pleas);
+const handleList = ({ pleas }: { pleas: Plea[] }) => {
+	setPleas(pleas);
+};
+
+const handlePleaAccepted = (plea: MyPlea) => {
+	setState(new Ignored(plea.id, plea.userId));
+};
+
+const handlePleaCanceled = ({ id }: { id: string }) => {
+	vscode.window.showInformationMessage(`Plea ${id} canceled`);
+};
+
+const handlePleaNotFound = ({ id }: { id: string }) => {
+	vscode.window.showErrorMessage(`Plea ${id} not found`);
+};
 
 const handleSessionResponse = async (data: PleaSession): Promise<void> => {
 	const vsls = await getApi();
 	await vsls?.join(vscode.Uri.parse(data.url, true));
-};
 
-const handleSessionNotFound = ({ id }: { id: string }) => {
-	vscode.window.showErrorMessage(`Plea ${id} not found`);
+	setState(new Pitying(data.id, data.sessionId));
 };
 
 const messageHandlers: Record<Topic, (...args: any[]) => void | Promise<void>> = {
@@ -65,8 +68,10 @@ const messageHandlers: Record<Topic, (...args: any[]) => void | Promise<void>> =
 	updated: handleUpdate,
 	removed: handleRemove,
 	list: handleList,
+	pleaAccepted: handlePleaAccepted,
+	pleaCanceled: handlePleaCanceled,
+	pleaNotFound: handlePleaNotFound,
 	sessionInfo: handleSessionResponse,
-	sessionNotFound: handleSessionNotFound,
 };
 
 const connect = (): void => {
@@ -84,13 +89,11 @@ const connect = (): void => {
 		const { topic, ...data }: { topic: Topic; data: unknown } = JSON.parse(message);
 
 		messageHandlers[topic](data);
-		sendNotifications();
 		console.log(`Received: ${message}`);
 	});
 };
 
-const listen = (...subscribers: { (): void }[]) => {
-	subscriptions = subscribers;
+const initialize = () => {
 	shouldReconnect = true;
 	console.log('Connecting...');
 	intervalId = setInterval(connect, reconnectTimer);
@@ -103,12 +106,43 @@ const stopListening = () => {
 	socket?.close();
 };
 
+const pleadForHelp = (plea: PleaRequest) => {
+	socket?.send(
+		JSON.stringify({
+			topic: 'halllpPlease',
+			data: plea,
+		})
+	);
+};
+
+const neverMind = () => {
+	const { state } = getState();
+
+	let id, userId;
+
+	if (state instanceof Ignored || state instanceof Pitied) {
+		id = state.pleaId;
+		userId = state.userId;
+	}
+
+	const notNil = complement(isNil);
+	const canCancel = notNil(id) && notNil(userId);
+
+	if (canCancel) {
+		socket?.send(
+			JSON.stringify({
+				topic: 'neverMind',
+				data: { id, userId },
+			})
+		);
+	}
+};
+
 const provideAid = (pleaId: string) => {
 	socket?.send(
 		JSON.stringify({
 			topic: 'sessionRequested',
-			// data: { id: pleaId },
-			data: { id: `${pleaId}aoeu` },
+			data: { id: pleaId },
 		})
 	);
 };
@@ -118,8 +152,10 @@ enum Topic {
 	list = 'list',
 	updated = 'updated',
 	removed = 'removed',
+	pleaAccepted = 'pleaAccepted',
+	pleaCanceled = 'pleaCanceled',
+	pleaNotFound = 'pleaNotFound',
 	sessionInfo = 'sessionInfo',
-	sessionNotFound = 'sessionNotFound',
 }
 
-export { listen, stopListening, provideAid };
+export { initialize, neverMind, stopListening, provideAid, pleadForHelp };

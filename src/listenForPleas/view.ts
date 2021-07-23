@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import { compose, map, propOr, uniqBy } from 'ramda';
 import { Plea } from '../types/plea';
-import { getPleas } from './getPleas';
+import { getState } from '../state/state';
 import * as takePity from '../takePity/command';
+import { PropilotState } from '../types/state';
 
 const toLanguage = (plea: Plea): PleaLanguage => new PleaLanguage(plea.language);
 const toPlea = (plea: Plea): PleaItem => new PleaItem(plea);
@@ -33,12 +34,12 @@ export default class AmateursTreeDataProvider implements vscode.TreeDataProvider
 	readonly onDidChangeTreeData: vscode.Event<PleaTreeItem | undefined | null | void> =
 		this._onDidChangeTreeData.event;
 
-	// TODO: Why duplicate languages in pleas tree view?
-	refresh(): void {
-		const pleas = getPleas();
+	refresh(state: PropilotState): void {
+		const { pleas } = state;
 		this.pleas = pleas.map(toPlea);
 		this.languages = getLanguages(pleas);
 		this._onDidChangeTreeData.fire();
+		console.log(getState().state);
 	}
 }
 

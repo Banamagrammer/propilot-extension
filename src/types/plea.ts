@@ -16,3 +16,7 @@ export interface PleaSession extends Plea {
 	sessionId: string;
 	url: string;
 }
+
+export interface MyPlea extends PleaSession {
+	userId: string;
+}

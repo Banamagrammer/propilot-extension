@@ -1,14 +1,12 @@
-import * as http from 'http';
 import * as vscode from 'vscode';
 import * as vsls from 'vsls';
 import { DEFAULT_HANDLE, EXTENSION_NAME, HANDLE_CONFIGURATION, PORT } from '../constants';
+import { pleadForHelp } from '../listenForPleas/socket';
 import { PleaRequest } from '../types/plea';
 
 const title = 'halpMe';
 const name = 'ineedahepro';
 const fullName = `${EXTENSION_NAME}.${name}`;
-
-const url = `http://localhost:${PORT}/halllp`;
 
 const action = async (): Promise<void> => {
 	const api = await vsls.getApi();
@@ -33,25 +31,7 @@ const action = async (): Promise<void> => {
 		language: vscode.window.activeTextEditor?.document?.languageId ?? 'unknown',
 	};
 
-	const requestData = JSON.stringify(plea);
-
-	const options: http.RequestOptions = {
-		method: 'PUT',
-		port: PORT,
-		headers: {
-			/* eslint-disable @typescript-eslint/naming-convention */
-			'Content-Type': 'application/json',
-			'Content-Length': Buffer.byteLength(requestData),
-			/* eslint-enable @typescript-eslint/naming-convention */
-		},
-	};
-
-	const req = http.request(url, options, (res) => {
-		res.on('data', (d) => console.log(d.toString()));
-	});
-
-	req.write(requestData);
-	req.end();
+	pleadForHelp(plea);
 };
 
 export { title, fullName as name, action };

@@ -5,21 +5,29 @@ import { getApi } from 'vsls';
 import * as halpCommand from './callForHalp/command';
 import * as halpCompletion from './callForHalp/completion';
 import * as takePityCommand from './takePity/command';
-import { EXTENSION_NAME, PLEAS_VIEW, PRO_CONFIGURATION } from './constants';
-import { listen, stopListening } from './listenForPleas/socket';
+import { EXTENSION_NAME, HANDLE_CONFIGURATION, PLEAS_VIEW, PRO_CONFIGURATION } from './constants';
+import {
+	initialize as initializeState,
+	setHandle,
+	setIsPro,
+	addListener as addStateListener,
+} from './state/state';
+import { initialize as initializeSocket } from './listenForPleas/socket';
 import AmateursTreeDataProvider from './listenForPleas/view';
 import handleSessionEvent from './sessionHandler';
+import { PropilotState } from './types/state';
 
 const handleConfigurationChanged = (e: vscode.ConfigurationChangeEvent) => {
 	if (e.affectsConfiguration(`${EXTENSION_NAME}.${PRO_CONFIGURATION}`)) {
-		const amPro = vscode.workspace.getConfiguration(EXTENSION_NAME)[PRO_CONFIGURATION];
-		if (amPro) {
-			listen();
-		} else {
-			stopListening();
-		}
+		setIsPro(vscode.workspace.getConfiguration(EXTENSION_NAME)[PRO_CONFIGURATION]);
+	} else if (e.affectsConfiguration(`${EXTENSION_NAME}.${HANDLE_CONFIGURATION}`)) {
+		setHandle(vscode.workspace.getConfiguration(EXTENSION_NAME)[HANDLE_CONFIGURATION]);
 	}
 };
+
+const handleStateUpdated =
+	(treeProvider: AmateursTreeDataProvider) => (oldState: PropilotState, newState: PropilotState) =>
+		treeProvider.refresh.call(treeProvider, newState);
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -27,6 +35,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "propilot" is now active!');
+
+	initializeState();
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
@@ -44,6 +54,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	const treeProvider = new AmateursTreeDataProvider();
 	const treeView = vscode.window.registerTreeDataProvider(PLEAS_VIEW, treeProvider);
 
+	addStateListener(handleStateUpdated(treeProvider));
+
 	const vsls = await getApi();
 	const sessionListener = vsls?.onDidChangeSession(handleSessionEvent);
 
@@ -52,7 +64,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		context.subscriptions.push(sessionListener);
 	}
 
-	listen(treeProvider.refresh.bind(treeProvider));
+	initializeSocket();
 }
 
 // this method is called when your extension is deactivated
