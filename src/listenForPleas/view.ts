@@ -58,7 +58,8 @@ class PleaItem extends vscode.TreeItem {
 		super(plea.handle, vscode.TreeItemCollapsibleState.None);
 		this.id = plea.id.toString();
 		this.language = plea.language;
-		this.tooltip = `Created at: ${plea.createdAt}`;
+		this.description = plea.description;
+		this.tooltip = `(${plea.createdAt}) ${plea.description}`;
 		this.command = this.takePity();
 	}
 

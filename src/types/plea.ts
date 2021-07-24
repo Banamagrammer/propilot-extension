@@ -3,6 +3,7 @@ export interface PleaRequest {
 	url: string;
 	handle: string;
 	language: string;
+	description: string;
 }
 
 export interface Plea {
@@ -10,6 +11,7 @@ export interface Plea {
 	handle: string;
 	language: string;
 	createdAt: Date;
+	description: string;
 }
 
 export interface PleaSession extends Plea {
