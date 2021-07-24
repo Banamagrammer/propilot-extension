@@ -12,6 +12,7 @@ import {
 	setIsPro,
 	addListener as addStateListener,
 } from './state/state';
+import { initialize as initializeStatusBar } from './state/statusBar';
 import { initialize as initializeSocket } from './listenForPleas/socket';
 import AmateursTreeDataProvider from './listenForPleas/view';
 import handleSessionEvent from './sessionHandler';
@@ -36,7 +37,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "propilot" is now active!');
 
+	const statusBarItem = initializeStatusBar();
 	initializeState();
+	statusBarItem.show();
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
@@ -59,7 +62,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	const vsls = await getApi();
 	const sessionListener = vsls?.onDidChangeSession(handleSessionEvent);
 
-	context.subscriptions.push(halp, takePity, provider, configListener, treeView);
+	context.subscriptions.push(statusBarItem, halp, takePity, provider, configListener, treeView);
 	if (sessionListener !== undefined) {
 		context.subscriptions.push(sessionListener);
 	}

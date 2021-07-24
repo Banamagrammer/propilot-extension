@@ -17,7 +17,7 @@
   - When a pro leaves a session, set plea to active
 - ~~Hide pleas if you have an active plea~~
 - ~~Add description to plea~~
-- Show status (probably on bottom of the screen)
+- ~~Show status~~
 - How to host in cloud?
 - How to maintain state?
 - How to test extension?

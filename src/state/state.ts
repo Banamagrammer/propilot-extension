@@ -9,6 +9,7 @@ import {
 } from '../constants';
 import { Plea } from '../types/plea';
 import { Idling, PropilotState, StateListener, UserState } from '../types/state';
+import { update as updateStatusBar } from './statusBar';
 
 const getHandle = () => {
 	let handle: string =
@@ -38,6 +39,7 @@ let initialized = false;
 const updateContext = (state: UserState) => {
 	const val = state instanceof Idling;
 	vscode.commands.executeCommand('setContext', `${EXTENSION_NAME}.${IS_IDLE_CONTEXT}`, val);
+	updateStatusBar(state);
 };
 
 const initialize = () => {
