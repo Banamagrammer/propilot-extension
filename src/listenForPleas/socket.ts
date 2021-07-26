@@ -6,9 +6,9 @@ import { addPlea, clearPleas, getState, removePlea, setPleas, setState } from '.
 import { Idling, Ignored, Pitied, Pitying, Pleading } from '../types/state';
 import { complement, isNil } from 'ramda';
 
-const protocol = 'ws';
-const port = 8080;
-const domain = 'localhost';
+const protocol = 'wss';
+const port = 443;
+const domain = 'propilot.pro-gramming.dev';
 const url = `${protocol}://${domain}:${port}`;
 const reconnectTimer = 15 * 1000;
 
